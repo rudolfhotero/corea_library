@@ -2,6 +2,15 @@
 require_once "../../clases/conexion/mto_empleado.php";
 require_once "../../clases/vista/mensajes.php";
 
+include_once '../../clases/login.php';
+
+session_start();
+$inicio_sesion =  new LogIn();
+
+if(isset($_SESSION['usr']) && isset($_SESSION['cod_usr'])){
+   $nom_usu = $_SESSION['usr'];
+   $cod_usu = $_SESSION['cod_usr'];
+
    $clMto_Empleado = new mto_empleado();
    $mensaje = "";
    $mdl = new mensajes();
@@ -13,7 +22,10 @@ require_once "../../clases/vista/mensajes.php";
             $resultado = $clMto_Empleado->eliminar_empleado($codigo);
             echo $resultado;
         }
-
+   
+}else{
+    header('location: ../../login.php');
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -126,15 +138,17 @@ require_once "../../clases/vista/mensajes.php";
                                 <table class="table table-striped table-bordered table-hover" id="dataTables-example">
                                      <thead>
                                         <tr>
-                                            <th>Codigo</th>
+                                            <th>Cod</th>
                                             <th>Nombre</th>
                                             <th>Apellidos</th>
                                             <th>Genero</th>
                                             <th>Usuario</th>
                                             <th>Departamento</th>
                                             <th>Municipio</th>
-                                            <th>Dirección</th>
+                                            <th>Profesión</th>
                                             <th>Rol</th>
+                                            <th>Modificar</th>
+                                            <th>Eliminar</th>
                                         </tr>
                                     </thead>
                                      <?php                                  
@@ -145,11 +159,11 @@ require_once "../../clases/vista/mensajes.php";
                                                 <td><?php echo $row['NOMBRE_EMPLEADO']; ?></td>
                                                 <td><?php echo $row['APELLIDO_EMPLEADO']; ?></td>
                                                 <td><?php echo $row['GENERO']; ?></td>
-                                                <td><?php echo $row['USUARIO_CODIGO_USUARIO']; ?></td>
-                                                <td><?php echo $row['DEPARTAMENTO_ID_DEPARTAMENTO']; ?></td>
-                                                <td><?php echo $row['MUNICIPIO_ID_MUNICIPIO']; ?></td>
-                                                <td><?php echo $row['DIRECCION']; ?></td>
-                                                <td><?php echo $row['ROL_ID_ROL']; ?></td>
+                                                <td><?php echo $row['NOMBRE_USUARIO']; ?></td>
+                                                <td><?php echo $row['NOMBRE_DEPARTAMENTO']; ?></td>
+                                                <td><?php echo $row['NOMBRE_MUNICIPIO']; ?></td>
+                                                <td><?php echo $row['NOMBRE_PROFESION']; ?></td>
+                                                <td><?php echo $row['NOMBRE_ROL']; ?></td>
                                                 <td><a href="empleado_ingresar.php?codigo=<?php echo $row['CODIGO_EMPLEADO']; ?>">Modificar</a></td>
                                                 <td><a href="empleados.php?codigo=<?php echo $row['CODIGO_EMPLEADO']; ?>">Eliminar</a></td>
                                             </tr><!-- /TROW -->                                  
@@ -193,3 +207,4 @@ require_once "../../clases/vista/mensajes.php";
 </body>
 
 </html>
+
