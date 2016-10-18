@@ -2,31 +2,41 @@
 require_once "../../clases/conexion/mto_empleado.php";
 require_once "../../clases/vista/mensajes.php";
 
+include_once '../../clases/login.php';
+
+session_start();
+$inicio_sesion =  new LogIn();
+
+if(isset($_SESSION['usr']) && isset($_SESSION['cod_usr'])){
+   $nom_usu = $_SESSION['usr'];
+   $cod_usu = $_SESSION['cod_usr'];
+   //Acá antes variables de sesión...
+   
    $clMto_Empleado = new mto_empleado();
-    $mensaje = "";
-    $mdl = new mensajes();
-    $codigo = "";
-    $nombre = "";
-    $apellido = "";
-    $genero = "";
-    $cod_usuario = "";
-    $cod_departamento = "";
-    $cod_municipio = "";
-    $direccion = "";
-    $rol = "";
-    $tipo_movimiento = 1;
+$mensaje = "";
+$mdl = new mensajes();
+$codigo = "";
+$nombre = "";
+$apellido = "";
+$genero = "";
+$cod_usuario = "";
+$departamento = "";
+$municipio = "";
+$direccion = "";
+$rol = "";
+$tipo_movimiento = 1;
 
 //Se necesita el método POST en el empleado 
 if(isset($_POST['guardar'])){
-    if(isset($_POST['codigo']) && !empty($_POST['codigo']) && isset($_POST['nombre']) && !empty($_POST['nombre']) && isset($_POST['apellido']) && !empty($_POST['apellido']) && isset($_POST['genero']) && !empty($_POST['genero']) && isset($_POST['cod_usuario']) && !empty($_POST['cod_usuario']) && isset($_POST['cod_departamento']) && !empty($_POST['cod_departamento']) && isset($_POST['cod_municipio']) && !empty($_POST['cod_municipio']) && isset($_POST['direccion']) && !empty($_POST['direccion']) && isset($_POST['rol']) && !empty($_POST['rol'])){
-        $codigo = $_POST['codigo']; 
+    if(isset($_POST['nombre']) && !empty($_POST['nombre']) && isset($_POST['apellido']) && !empty($_POST['apellido']) && isset($_POST['genero']) && !empty($_POST['genero']) && isset($_POST['cod_usuario']) && !empty($_POST['cod_usuario']) && isset($_POST['municipio']) && !empty($_POST['municipio']) && isset($_POST['departamento']) && !empty($_POST['departamento']) && isset($_POST['genero']) && !empty($_POST['genero']) && isset($_POST['id_profesion']) && !empty($_POST['id_profesion']) && isset($_POST['rol']) && !empty($_POST['rol'])){
+        $codigo = $_POST['codigo'];
         $nombre = $_POST['nombre'];
         $apellido = $_POST['apellido'];
         $genero = $_POST['genero'];
         $cod_usuario = $_POST['cod_usuario'];
-        $cod_departamento = $_POST['cod_departamento'];
-        $cod_municipio = $_POST['cod_municipio'];
-        $direccion = $_POST['direccion'];
+        $departamento = $_POST['departamento'];
+        $municipio = $_POST['municipio'];
+        $id_profesion = $_POST['id_profesion'];
         $rol = $_POST['rol'];
         
         $tipo_movimiento = $_POST['guardar'];
@@ -34,11 +44,11 @@ if(isset($_POST['guardar'])){
         if($tipo_movimiento == 2){
             $codigo = $_POST['codigo'];
             $tipo_movimiento = 2;
-            $estado = $clMto_Empleado->modificar_empleado($codigo,$nombre,$apellido,$genero,$cod_usuario,$cod_departamento,$cod_municipio,$direccion,$rol);
+            $estado = $clMto_Empleado->modificar_empleado($codigo,$nombre,$apellido,$genero,$cod_usuario,$departamento,$municipio,$direccion,$rol);
             $mensaje = "Modificado satisfactoriamente";
         }else{
             $tipo_movimiento = 1;
-            $estado = $clMto_Empleado->guardar_empleado($codigo,$nombre,$apellido,$genero,$cod_usuario,$cod_departamento,$cod_municipio,$direccion,$rol);
+            $estado = $clMto_Empleado->guardar_empleado($nombre,$apellido,$genero,$cod_usuario,$municipio,$departamento,$id_profesion,$rol);
            if ($estado == 1){
 			  $mensaje = "Guardado satisfactoriamente"; 
 		   }
@@ -67,8 +77,8 @@ if(isset($_POST['guardar'])){
         $apellido = $row['APELLIDO_EMPLEADO'];
         $genero = $row['GENERO'];
         $cod_usuario = $row['USUARIO_CODIGO_USUARIO'];
-        $cod_departamento = $row['DEPARTAMENTO_ID_DEPARTAMENTO'];
-        $cod_municipio = $row['MUNICIPIO_ID_MUNICIPIO'];
+        $departamento = $row['DEPARTAMENTO_ID_DEPARTAMENTO'];
+        $municipio = $row['MUNICIPIO_ID_MUNICIPIO'];
         $direccion = $row['DIRECCION'];
 		$rol = $row['ROL_ID_ROL'];
         endforeach;      
@@ -82,6 +92,10 @@ if(isset($_POST['guardar'])){
     $tipo_movimiento = 1;
 }    
 
+
+}else{
+    header('location: ../../login.php');
+}
                                                                           
 ?>
 <!DOCTYPE html>
@@ -205,40 +219,56 @@ if(isset($_POST['guardar'])){
                                             <label>GÉNERO</label>
                                             <select required name="genero" class="form-control">                                                
                                                     <option <?php if($genero == 1){echo "selected";}?> value="1">Femenino</option>
-                                                    <option <?php if($genero == 2){echo "selected";}?> value="2">Masculino</option>
+                                                    <option <?php if($genero == 0){echo "selected";}?> value="0">Masculino</option>
                                             </select>
                                     </div>  
  <div class="form-group">
-                                            <label>CARNET DE EMPLEADO</label>
-                                            <input name="cod_usuario" required class="form-control" value="<?php echo $cod_usuario; ?>" placeholder="Carné del empleado">
+                                            <label>USUARIO DEL EMPLEADO</label>
+                                            <select required name="cod_usuario" class="form-control">
+                                            <?php     
+                                                    $user = $clMto_Empleado->get_usuarios();
+                                                    foreach ($user as $row): ?>                                                                                                
+                                                    <option  <?php if($cod_usuario == $row['CODIGO_USUARIO']){echo "selected";}?> value="<?php echo $row['CODIGO_USUARIO']; ?>"><?php echo $row['NOMBRE_USUARIO']; ?></option>                                                                                            
+                                                <?php endforeach ?> 
+                                            </select>
                                         </div>
 
  <div class="form-group">
+                                              <div class="form-group">
                                             <label>DEPARTAMENTO</label>
-                                    <select required name="$cod_departamento" class="form-control">
-                                            <?php     
+                                            <select required name="departamento" id="departamento" class="form-control">                                                
+                                               <?php 
                                                     $depa = $clMto_Empleado->get_departamentos();
                                                     foreach ($depa as $row): ?>                                                                                                
-                                                    <option  <?php if($cod_departamento == $row['ID_DEPARTAMENTO']){echo "selected";}?> value="<?php echo $row['ID_DEPARTAMENTO']; ?>"><?php echo $row['NOMBRE_DEPARTAMENTO']; ?></option>                                                                                            
-                                                <?php endforeach ?> 
-                                            </select>
+                                                    <option <?php if($departamento == $row['ID_DEPARTAMENTO']){echo "selected";}?> value="<?php echo $row['ID_DEPARTAMENTO']; ?>"><?php echo $row['NOMBRE_DEPARTAMENTO']; ?></option>                                                                                            
+                                                <?php endforeach ?>    
+                                            </select>                                            
                                     </div>
 
- <div class="form-group">
+
+                                    <div class="form-group">
                                             <label>MUNICIPIO</label>
-                                            <select required name="cod_municipio" class="form-control">
+                                            <select required id="municipio" name="municipio" class="form-control">
                                                <?php 
-                                                    $muni = $clMto_Empleado->get_municipios();
-                                                    foreach ($muni as $row): ?>                                                                                                
-                                                    <option  <?php if($cod_municipio == $row['ID_MUNICIPIO']){echo "selected";}?> value="<?php echo $row['ID_MUNICIPIO']; ?>"><?php echo $row['NOMBRE_MUNICIPIO']; ?></option>                                                                                            
-                                                <?php endforeach ?> 
+                                                    if ($tipo_movimiento == 2) {
+                                                        $muni = $clMto_Empleado->get_municipios();
+                                                        foreach ($muni as $row): ?>                                                                                                
+                                                        <option  <?php if($municipio == $row['ID_MUNICIPIO']){echo "selected";}?> value="<?php echo $row['ID_MUNICIPIO']; ?>"><?php echo $row['NOMBRE_MUNICIPIO']; ?></option>                                                                                            
+                                                        <?php endforeach   ?>                                                      
+                                                    <?php }?>
+                                                                                                                                                       
                                             </select>
-                                    </div>
+                                    </div> 
 
                                      <div class="form-group">
-                                            <label>DIRECCIÓN</label>
-                                               <textarea name="direccion" class="form-control" rows="3"><?php echo $direccion ?></textarea>
-                                        </div
+                                            <label>PROFESIÓN</label>
+                                              <select required name="id_profesion" class="form-control">
+                                                 <?php
+                                                 $prof_list = $clMto_Empleado->get_profesion();
+                                                 foreach ($prof_list as $row): ?>
+                                             <option  <?php if($prof_list == $row['ID_PROFESION']){echo "selected";}?> value="<?php echo $row['ID_PROFESION']; ?>"><?php echo $row['NOMBRE_PROFESION']; ?></option>                                                                                            
+<?php endforeach ?>
+                                              </select>
 
                                         <div class="form-group">
                                             <label>ROL</label>
@@ -277,6 +307,27 @@ if(isset($_POST['guardar'])){
 
     </div>
     <!-- /#wrapper -->
+
+     <!-- Core Scripts - Include with every page -->
+     <script src="../../js/jquery-1.10.2.js"></script>
+    <script language="javascript">
+    $(document).ready(function(){
+       $("#departamento").change(function () {               
+               $("#departamento option:selected").each(function () {
+                id_departamento = $(this).val();
+                $.post("../../clases/conexion/municipios.php", { id_departamento: id_departamento }, function(data){
+                    $("#municipio").html(data);
+                });            
+            });
+       })
+       $('#texto').keyup(function() {
+            id_departamento = $(this).val();
+            $.post("../../clases/conexion/empleados.php", { id_departamento: id_departamento }, function(data){            
+            $("#lista").html(data);            
+            });
+        });  
+    });
+
 
     <!-- Core Scripts - Include with every page -->
     <script src="../../js/jquery-1.10.2.js"></script>
